@@ -152,11 +152,25 @@ impl<
     }
 
     pub fn load_file_bytes(&mut self, inode: &Inode<MAX_FILE_BLOCKS, BLOCK_SIZE>) {
-        todo!("Read the file pointed to by inode into the file content buffer.");
+        //"Read the file pointed to by inode into the file content buffer."
         // For each inode block in use
+            //   Read the block number from the inode
+            //   Read the block from disk into the block buffer
+            //   Copy the block's contents into the file content buffer
         //   Figure out the disk block referenced by that inode block
         //   Read the block from disk into the block buffer
         //   Copy the block's contents into the file content buffer
+
+        for i in 0..inode.blocks_used() {
+            let block_num = inode.blocks[i];
+            self.disk.read(block_num as usize, &mut self.block_buffer).unwrap();
+            let offset = i * BLOCK_SIZE;
+            let block_copy = min(BLOCK_SIZE, inode.bytes_stored as usize - offset);
+            self.file_content_buffer[offset..offset + block_copy].copy_from_slice(&self.block_buffer[..block_copy]);
+        }
+
+
+        
     }
 
     pub fn save_file_bytes(&mut self, inode: &Inode<MAX_FILE_BLOCKS, BLOCK_SIZE>) {
