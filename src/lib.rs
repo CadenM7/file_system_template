@@ -148,7 +148,19 @@ impl<
     }
 
     pub fn directory_exists(&mut self) -> bool {
-        todo!("Read block INODE_FULL_BLOCK from disk. If it does not start with a zero, the directory exists.");
+        //"Read block INODE_FULL_BLOCK from disk. If it does not start with a zero, the directory exists."
+        let directory_block = self.disk.read(INODE_FULL_BLOCK, &mut self.block_buffer);
+        match directory_block {
+            Ok(_) => {
+                let first_byte = self.block_buffer[0];
+                if first_byte == 0 {
+                    false
+                } else {
+                    true
+                }
+            }
+            Err(_) => false,
+        }
     }
 
     pub fn load_file_bytes(&mut self, inode: &Inode<MAX_FILE_BLOCKS, BLOCK_SIZE>) {
@@ -164,25 +176,24 @@ impl<
         for i in 0..inode.blocks_used() {
             let block_num = inode.blocks[i];
             self.disk.read(block_num as usize, &mut self.block_buffer).unwrap();
-            let offset = i * BLOCK_SIZE;
-            let block_copy = min(BLOCK_SIZE, inode.bytes_stored as usize - offset);
-            self.file_content_buffer[offset..offset + block_copy].copy_from_slice(&self.block_buffer[..block_copy]);
+            self.file_content_buffer[i * BLOCK_SIZE..(i + 1) * BLOCK_SIZE].copy_from_slice(&self.block_buffer);
         }
-
-
-        
     }
 
     pub fn save_file_bytes(&mut self, inode: &Inode<MAX_FILE_BLOCKS, BLOCK_SIZE>) {
-        todo!("Write the file pointed to by inode from the file content buffer onto the disk.");
+        //"Write the file pointed to by inode from the file content buffer onto the disk."
         // For each inode block in use
         //   Figure out the disk block referenced by that inode block
         //   Copy the bytes for this block into the block buffer
         //   Write the block buffer to disk
+
+        for i in 0..inode.blocks_used() {
+            
+        }
     }
 
     pub fn activate_bit(&mut self, bit: usize, block: usize) {
-        todo!("Set bit `bit` within `block` to 1.");
+        //"Set bit `bit` within `block` to 1."
         // Read the block into the block buffer.
         // Set the appropriate bit to 1.
         // Write the block back to the disk.
@@ -556,7 +567,9 @@ mod tests {
     ) -> FileSystem<16, BLOCK_SIZE, NUM_BLOCKS, MAX_FILE_BLOCKS, 512, MAX_FILES_STORED, 8> {
         FileSystem::new(COMPLEX_1_RAM_DISK)
     }
-
+    
+    //Level 1 Tests
+    //4/22 Tests Passed
     #[test]
     fn test_bit() {
         for (buffer, bit) in [
@@ -567,7 +580,6 @@ mod tests {
             assert_eq!(lowest_zero_in(&buffer), bit);
         }
     }
-
     #[test]
     fn test_no_directory_exists() {
         let mut sys = make_clear_fs();
@@ -848,6 +860,7 @@ mod tests {
         assert_eq!(&inode.blocks[..3], [10, 11, 13]);
     }
 
+    //Level 2 Tests
     // *** ORIGINAL TESTS *** //
     #[test]
     fn test_empty() {
