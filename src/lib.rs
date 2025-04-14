@@ -188,7 +188,10 @@ impl<
         //   Write the block buffer to disk
 
         for i in 0..inode.blocks_used() {
-            
+            let block_num = inode.blocks[i];
+            self.block_buffer.copy_from_slice(&self.file_content_buffer[i * BLOCK_SIZE..(i + 1) * BLOCK_SIZE]);
+            self.disk.write(block_num as usize, &self.block_buffer).unwrap();
+
         }
     }
 
@@ -569,7 +572,7 @@ mod tests {
     }
     
     //Level 1 Tests
-    //4/22 Tests Passed
+    //5/22 Tests Passed
     #[test]
     fn test_bit() {
         for (buffer, bit) in [
