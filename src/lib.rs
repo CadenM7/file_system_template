@@ -200,6 +200,14 @@ impl<
         // Read the block into the block buffer.
         // Set the appropriate bit to 1.
         // Write the block back to the disk.
+        
+        self.disk.read(block, &mut self.block_buffer).unwrap();
+        let byte = bit / 8;
+        let within = bit % 8;
+        let target = 1 << within;
+        self.block_buffer[byte] |= target;
+        self.disk.write(block, &self.block_buffer).unwrap();
+
     }
 
     fn request_data_block(&mut self) -> anyhow::Result<u8, FileSystemError> {
@@ -214,6 +222,7 @@ impl<
 
     fn clear_block_buffer(&mut self) {
         todo!("Set all elements of the block buffer to zero.");
+
     }
 
     pub fn inode_table_inode(&mut self) -> Inode<MAX_FILE_BLOCKS, BLOCK_SIZE> {
