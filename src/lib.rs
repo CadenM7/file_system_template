@@ -211,13 +211,25 @@ impl<
     }
 
     fn request_data_block(&mut self) -> anyhow::Result<u8, FileSystemError> {
-        todo!("Find a data block number to meet a block request.");
         // Find the lowest unused data block.
         // * If there are no unused data blocks, return a DiskFull error.
         // * If the lowest unused data block meets or exceeds NUM_BLOCKS,
         //   return a DiskFull error.
         // Activate that bit in the data-in-use block (i.e., DATA_FULL_BLOCK)
         // Return that block number.
+
+        let block = self.find_lowest_zero_bit_in(DATA_FULL_BLOCK);
+        match block {
+            Some(block) => {
+                if block >= NUM_BLOCKS {
+                    Err(FileSystemError::DiskFull)
+                } else {
+                    self.activate_bit(block, DATA_FULL_BLOCK);
+                    Ok(block as u8)
+                }
+            }
+            None => Err(FileSystemError::DiskFull),
+        }
     }
 
     fn clear_block_buffer(&mut self) {
@@ -256,11 +268,7 @@ impl<
         todo!("Call activate_bit() for each inode block to mark all of the inode blocks as being in use.")
     }
 
-    fn initialize_new_file(
-        &mut self,
-        inode_num: usize,
-        first_block: u8,
-    ) -> Inode<MAX_FILE_BLOCKS, BLOCK_SIZE> {
+    fn initialize_new_file(&mut self, inode_num: usize,first_block: u8,) -> Inode<MAX_FILE_BLOCKS, BLOCK_SIZE> {
         todo!("create a new file!")
         // Create a new inode using first_block.
         // Call save_inode() to create a table entry for it.
@@ -374,12 +382,7 @@ impl<
         // Return its file descriptor.
     }
 
-    fn create_directory_entry(
-        &mut self,
-        filename: &str,
-        inode_num: usize,
-        directory_inode: &mut Inode<MAX_FILE_BLOCKS, BLOCK_SIZE>,
-    ) -> anyhow::Result<(), FileSystemError> {
+    fn create_directory_entry(&mut self, filename: &str, inode_num: usize, directory_inode: &mut Inode<MAX_FILE_BLOCKS, BLOCK_SIZE>,) -> anyhow::Result<(), FileSystemError> {
         todo!("Create a new entry in the directory file");
         // Call `load_directory()` to get the directory file into the file contents buffer.
         // Calculate the array entry in the file content buffer for the inode number.
@@ -581,7 +584,7 @@ mod tests {
     }
     
     //Level 1 Tests
-    //5/22 Tests Passed
+    //7/22 Tests Passed
     #[test]
     fn test_bit() {
         for (buffer, bit) in [
